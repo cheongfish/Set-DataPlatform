@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-schema
+  namespace: trino
+  labels:
+    app: init-schema
+spec:
+  template:
+    metadata:
+      name: init-schema
+      labels:
+        app: init-schema
+    spec:
+      containers:
+        - name: init-schema
+          image: cheongwoon97/hive-metastore:0.09
+          command: ["/usr/local/hive/bin/schematool"]
+          args:
+            [
+              "--verbose",
+              "-initSchema",
+              "-dbType",
+              "mysql",
+              "-userName",
+              root,
+              "-passWord",
+              test1234,
+              "-url",
+              "jdbc:mysql://mysql-service.trino.svc.cluster.local:3306/metastore_db?createDatabaseIfNotExist=true&connectTimeout=1000",
+            ]
+      restartPolicy: Never
+  backoffLimit: 4

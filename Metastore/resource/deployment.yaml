@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-metastore
+  namespace: trino
+  labels:
+    app: hive-metastore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hive-metastore
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      containers:
+        - name: hive-metastore
+          image: cheongwoon97/hive-metastore:0.09
+          imagePullPolicy: Always
+
+          command: ["/usr/local/hive/bin/hive"]
+          args:
+            - "--hiveconf"
+            - "hive.root.logger=DEBUG,DRFA"
+            - "--hiveconf"
+            - "hive.log.dir=/usr/local/hive/logs"
+            - "--hiveconf"
+            - "hive.log.file=debug_hive.log"
+            - "--service"
+            - "metastore"
+            - "-p"
+            - "9083"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          env:
+            - name: HIVE_CONF_DIR
+              value: "/usr/local/hive/conf"
+            - name: HIVE_METASTORE_URI
+              value: "thrift://0.0.0.0:9083"
+          ports:
+            - containerPort: 9083
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-metastore
+  namespace: trino
+spec:
+  selector:
+    app: hive-metastore
+  ports:
+    - protocol: TCP
+      port: 9083
+      targetPort: 9083
